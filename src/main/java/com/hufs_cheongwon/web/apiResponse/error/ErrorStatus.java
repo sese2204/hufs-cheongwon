@@ -32,12 +32,10 @@ public enum ErrorStatus {
     TOKEN_INVALID(HttpStatus.BAD_REQUEST, StatusCode.USER.getCode(4012), "유효하지 않은 토큰입니다."),
     TOKEN_EXPIRATION(HttpStatus.BAD_REQUEST, StatusCode.USER.getCode(4013), "만료된 토큰입니다."),
     EMAIL_UNCERTIFIED(HttpStatus.UNAUTHORIZED, StatusCode.USER.getCode(4014), "인증되지 않은 이메일입니다."),
-    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, StatusCode.USER.getCode(4015), "리프레쉬 토큰이 존재하지 않습니다."),
-    USER_REFRESH_TOKEN_INVALID(HttpStatus.BAD_REQUEST, StatusCode.USER.getCode(4016), "사용자의 리프레쉬 토큰이 아닙니다."),
-
+    REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND, StatusCode.USER.getCode(4015), "존재하지 않는 리프레쉬 토큰입니다."),
+    COOKIE_EMPTY(HttpStatus.BAD_REQUEST, StatusCode.COMMON.getCode(4016), "쿠키가 비어있습니다."),
 
     ADMIN_NOT_FOUND(HttpStatus.BAD_REQUEST, StatusCode.ADMIN.getCode(4001), "관리자 계정을 찾을 수 없습니다."),
-    ADMIN_REFRESH_TOKEN_INVALID(HttpStatus.BAD_REQUEST, StatusCode.ADMIN.getCode(4002), "관리자의 리프레쉬 토큰이 아닙니다."),
     ;
 
 

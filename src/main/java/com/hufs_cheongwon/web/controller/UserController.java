@@ -1,10 +1,12 @@
 package com.hufs_cheongwon.web.controller;
 
 import com.hufs_cheongwon.common.Constant;
+import com.hufs_cheongwon.common.exception.UserNotFoundException;
 import com.hufs_cheongwon.common.security.JwtUtil;
 import com.hufs_cheongwon.service.RefreshTokenService;
 import com.hufs_cheongwon.service.UsersService;
 import com.hufs_cheongwon.web.apiResponse.ApiResponse;
+import com.hufs_cheongwon.web.apiResponse.error.ErrorStatus;
 import com.hufs_cheongwon.web.apiResponse.success.SuccessStatus;
 import com.hufs_cheongwon.web.dto.*;
 import jakarta.servlet.http.HttpServletResponse;
@@ -63,10 +65,14 @@ public class UserController {
     public ApiResponse<LoginResponse> reissueUserToken(
             @CookieValue(name = "refresh_token") String refreshToken, HttpServletResponse response) throws IOException{
 
-        LoginResponse reissueResponse = refreshTokenService.reissueToken("ROLE_USER", refreshToken);
+        if (refreshToken == null) {
+            throw new UserNotFoundException(ErrorStatus.COOKIE_EMPTY);
+        }
+
+        LoginResponse reissueResponse = refreshTokenService.reissueToken(refreshToken);
 
         // Refresh Token을 쿠키에 설정
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", refreshToken)
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", reissueResponse.getTokenDto().getRefreshToken())
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")
@@ -76,5 +82,10 @@ public class UserController {
         response.setHeader("Set-Cookie", refreshTokenCookie.toString());
 
         return ApiResponse.onSuccess(SuccessStatus.REISSUE_TOKEN_SUCCESS, reissueResponse);
+    }
+
+    @GetMapping("/test")
+    public ApiResponse<Void> testAuthorization() {
+        return ApiResponse.onSuccess(SuccessStatus._OK, null);
     }
  }

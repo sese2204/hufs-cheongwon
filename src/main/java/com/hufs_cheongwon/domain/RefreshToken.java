@@ -32,4 +32,34 @@ public class RefreshToken extends BaseTimeEntity {
     public void updateToken(String token) {
         this.token = token;
     }
+
+    public String getRole() {
+        if (users != null && admin == null) {
+            return "ROLE_USER";
+        } else if (users == null && admin != null) {
+            return "ROLE_ADMIN";
+        } else {
+            return null;
+        }
+    }
+
+    public String getEmail() {
+        if (users != null && admin == null) {
+            return users.getEmail();
+        } else if (users == null && admin != null) {
+            return admin.getEmail();
+        } else {
+            return null;
+        }
+    }
+
+    public Long getId() {
+        if (users != null && admin == null) {
+            return users.getId();
+        } else if (users == null && admin != null) {
+            return admin.getId();
+        } else {
+            return null;
+        }
+    }
 }
