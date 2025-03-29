@@ -123,21 +123,21 @@ public class UserController {
     }
 
     /**
-     * 회원 탈퇴
+     * 회원 탈퇴 (soft-delete)
      */
-    @PostMapping("/delete")
-    public ApiResponse<Void> deleteUser(HttpServletRequest request, @AuthenticationPrincipal CustomUserDetails customUserDetails) {
+    @PostMapping("/withdraw")
+    public ApiResponse<Void> withdrawUser(HttpServletRequest request) {
         //헤더에서 access token 추출
         String accessToken = jwtUtil.resolveAccessToken(request);
         String username = jwtUtil.getUsername(accessToken);
 
         usersService.withdrawUser(username, accessToken);
 
-        return ApiResponse.onSuccess(SuccessStatus.USER_SING_OUT_SUCCESS, null);
+        return ApiResponse.onSuccess(SuccessStatus.USER_SIGN_OUT_SUCCESS, null);
     }
 
     /**
-     * 비밀 번호 찾기 위한 본인 인증
+     * 비밀 번호 변경
      */
     @PostMapping("/pwd/update")
     public ApiResponse<AuthInfoResponse> updatePassword(@Valid @RequestBody LoginRequest request,

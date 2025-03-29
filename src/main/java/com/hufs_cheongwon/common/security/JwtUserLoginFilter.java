@@ -106,15 +106,7 @@ public class JwtUserLoginFilter extends UsernamePasswordAuthenticationFilter {
         log.warn("[Authentication] 로그인 실패 - 사유: {}", failed.getMessage());
         AuthenticationException exception = new AuthenticationException(objectMapper);
 
-        if (failed.getCause() instanceof ResourceNotFoundException) {
-            log.warn("[Authentication] 로그인 실패 - 사용자 정보 없음");
-            exception.sendErrorResponse(response, ErrorStatus.USER_NOT_FOUND);
-        } else if (failed instanceof BadCredentialsException) {
-            log.warn("[Authentication] 로그인 실패 - 비밀번호 불일치");
-            exception.sendErrorResponse(response, ErrorStatus.PASSWORD_WRONG);
-        } else {
-            log.error("[Authentication] 로그인 실패 - 알 수 없는 오류");
-            exception.sendErrorResponse(response, ErrorStatus._LOGIN_FAILURE);
-        }
+        //로그인 실패 이유 알 수 없도록 일반적인 오류 메세지 보내기
+        exception.sendErrorResponse(response, ErrorStatus._LOGIN_FAILURE);
     }
 }

@@ -2,8 +2,10 @@ package com.hufs_cheongwon.common.security;
 
 import com.hufs_cheongwon.common.Constant;
 import com.hufs_cheongwon.common.Util;
+import com.hufs_cheongwon.common.exception.InvalidStateException;
 import com.hufs_cheongwon.common.exception.ResourceNotFoundException;
 import com.hufs_cheongwon.domain.Users;
+import com.hufs_cheongwon.domain.enums.UsersStatus;
 import com.hufs_cheongwon.repository.UsersRepository;
 import com.hufs_cheongwon.web.apiResponse.error.ErrorStatus;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +33,11 @@ public class CustomUserDetailsService implements UserDetailsService {
                     log.warn("[Authentication] 사용자 정보 없음 - 이메일: {}", Util.maskEmail(username));
                     return new ResourceNotFoundException(ErrorStatus.USER_NOT_FOUND);
                 });
+
+        // 탈퇴한 사용자라면 예외 던지기
+        if (user.getUsersStatus() != UsersStatus.ACTIVE) {
+            throw new InvalidStateException(ErrorStatus.WITHDRAWN_USER);
+        }
         return CustomUserDetails.from(user);
     }
 }

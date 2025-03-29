@@ -1,5 +1,6 @@
 package com.hufs_cheongwon.web.dto.response;
 
+import com.hufs_cheongwon.common.Util;
 import com.hufs_cheongwon.domain.Admin;
 import com.hufs_cheongwon.domain.Response;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -45,7 +46,7 @@ public class AnswerResponse {
                         .adminId(admin.getId())
                         .departure(admin.getDeparture())
                         .role(admin.getRole())
-                        .email(admin.getEmail())
+                        .email(Util.maskEmail(admin.getEmail()))
                         .phoneNumber(admin.getPhoneNumber())
                         .build())
                 .build();

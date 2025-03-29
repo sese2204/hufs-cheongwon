@@ -11,4 +11,6 @@ public class Constant {
     public static final Integer THRESHOLDAGREEMENT = 10;
 
     public static final Integer EXPIRED_DATE = 1;
+
+    public static final Integer USER_WITHDRAW_DATE = 1;
 }

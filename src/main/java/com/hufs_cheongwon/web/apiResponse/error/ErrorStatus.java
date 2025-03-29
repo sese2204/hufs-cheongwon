@@ -39,6 +39,7 @@ public enum ErrorStatus {
     EMAIL_NOT_SCHOOL(HttpStatus.BAD_REQUEST, StatusCode.USER.getCode(4018), "학교 이메일이 아닙니다."),
     AUTH_CODE_SEND_FAIL(HttpStatus.INTERNAL_SERVER_ERROR, StatusCode.USER.getCode(4019), "인증번호 발송에 실패하였습니다."),
     AUTH_CODE_NOT_RECEIVED(HttpStatus.BAD_REQUEST, StatusCode.USER.getCode(4020), "인증코드를 받은 적이 없는 사용자입니다."),
+    WITHDRAWN_USER(HttpStatus.BAD_REQUEST, StatusCode.USER.getCode(4021), "이미 탈퇴된 계정입니다."),
 
     PETITION_NOT_FOUND(HttpStatus.NOT_FOUND, StatusCode.PETITION.getCode(4001), "해당 청원이 존재하지 않습니다."),
     PETITION_NOT_ONGOING(HttpStatus.BAD_REQUEST, StatusCode.PETITION.getCode(4002), "진행 중인 청원만 동의할 수 있습니다."),

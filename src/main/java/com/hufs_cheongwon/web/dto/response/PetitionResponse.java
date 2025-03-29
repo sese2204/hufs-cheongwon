@@ -1,6 +1,7 @@
 package com.hufs_cheongwon.web.dto.response;
 
 import com.hufs_cheongwon.common.Constant;
+import com.hufs_cheongwon.common.Util;
 import com.hufs_cheongwon.domain.Link;
 import com.hufs_cheongwon.domain.Petition;
 import com.hufs_cheongwon.domain.enums.Category;
@@ -50,7 +51,7 @@ public class PetitionResponse {
                 .agreeCount(petition.getAgreeCount())
                 .viewCount(petition.getViewCount())
                 .reportCount(petition.getReportCount())
-                .writerEmail(petition.getUsers().getEmail())
+                .writerEmail(Util.maskEmail(petition.getUsers().getEmail()))
                 .links(linkList)
                 .createDate(petition.getCreatedAt().toLocalDate())
                 .endDate(petition.getCreatedAt().toLocalDate().plus(Constant.PETITION_ACTIVE_PERIOD))
@@ -75,7 +76,7 @@ public class PetitionResponse {
                 .agreeCount(petition.getAgreeCount())
                 .viewCount(petition.getViewCount())
                 .reportCount(petition.getReportCount())
-                .writerEmail(petition.getUsers().getEmail())
+                .writerEmail(Util.maskEmail(petition.getUsers().getEmail()))
                 .links(linkList)
                 .createDate(petition.getCreatedAt().toLocalDate())
                 .endDate(petition.getCreatedAt().toLocalDate().plus(Constant.PETITION_ACTIVE_PERIOD))

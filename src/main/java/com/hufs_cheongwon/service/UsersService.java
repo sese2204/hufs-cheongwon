@@ -2,6 +2,7 @@ package com.hufs_cheongwon.service;
 
 import com.hufs_cheongwon.common.Util;
 import com.hufs_cheongwon.common.exception.DuplicateResourceException;
+import com.hufs_cheongwon.common.exception.InvalidStateException;
 import com.hufs_cheongwon.common.exception.ResourceNotFoundException;
 import com.hufs_cheongwon.domain.Users;
 import com.hufs_cheongwon.domain.enums.UsersStatus;
@@ -54,13 +55,27 @@ public class UsersService {
             throw new ResourceNotFoundException(ErrorStatus.EMAIL_UNCERTIFIED);
         }
         System.out.println(tokenEmail+email);
+
         // 존재하는 이메일인지 확인
-        Boolean isExist = usersRepository.existsByEmail(email);
-        if (isExist){
-            log.warn("[회원가입 실패] 중복된 이메일: {}", Util.maskEmail(email));
-            throw new DuplicateResourceException(ErrorStatus.EMAIL_DUPLICATED);
+        Users existingUser = usersRepository.findByEmail(email).orElse(null);
+        if (existingUser != null){
+            if (existingUser.getUsersStatus() == UsersStatus.INACTIVE) {
+                // 기존 비활성 유저: 정보 갱신 + 상태 복구
+                existingUser.setEncodedPassword(bCryptPasswordEncoder.encode(password));
+                existingUser.changeUserStatus(UsersStatus.ACTIVE);
+                log.info("[회원 재가입] 기존 INACTIVE 사용자 상태 복원 - email={}", Util.maskEmail(email));
+                return AuthInfoResponse.builder()
+                        .userId(existingUser.getId())
+                        .role(existingUser.getRole())
+                        .email(existingUser.getEmail())
+                        .build();
+            } else {
+                //ACTIVE 중복 에러
+                throw new DuplicateResourceException(ErrorStatus.EMAIL_DUPLICATED);
+            }
         }
 
+        // 새로운 유저
         Users newUser = Users.builder()
                 .email(email)
                 .usersStatus(UsersStatus.ACTIVE)
@@ -139,44 +154,6 @@ public class UsersService {
     }
 
     /**
-     * 회원 탈퇴
-     */
-    public void withdrawUser(String username, String token) {
-        log.info("[회원 탈퇴 요청] 사용자: {}", Util.maskEmail(username));
-        // access token 블랙리스트 등록 & refresh token 삭제
-        tokenService.destroyToken(username, token);
-        // 디비에서 user 정보 삭제
-        usersRepository.deleteByEmail(username);
-        log.info("[회원 탈퇴 완료] 사용자: {}", Util.maskEmail(username));
-    }
-
-    /**
-     * 비밀번호 변경
-     */
-    public AuthInfoResponse updatePassword(LoginRequest request, String tokenEmail) {
-        String email = request.getEmail();
-        String password = request.getPassword();
-        // 인증된 이메일인지 확인
-        if (!tokenEmail.equals(email)) {
-            log.warn("[비밀번호 변경 실패] 이메일 불일치 - tokenEmail={}, requestEmail={}", Util.maskEmail(tokenEmail), Util.maskEmail(email));
-            throw new ResourceNotFoundException(ErrorStatus.EMAIL_UNCERTIFIED);
-        }
-        // 가입된 사용자인지 확인
-        Users user = usersRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    log.warn("[비밀번호 변경 실패] 가입되지 않은 이메일: {}", Util.maskEmail(email));
-                    return new ResourceNotFoundException(ErrorStatus.USER_NOT_FOUND);
-                });
-        // 비밀번호 변경
-        user.setEncodedPassword((bCryptPasswordEncoder.encode(password)));
-        return AuthInfoResponse.builder()
-                .userId(user.getId())
-                .role(user.getRole())
-                .email(user.getEmail())
-                .build();
-    }
-
-    /**
      * 인증코드 생성
      */
     private String generateAuthCode() {
@@ -188,5 +165,66 @@ public class UsersService {
         }
 
         return authCode.toString();
+    }
+
+    /**
+     * 비밀번호 변경
+     */
+    public AuthInfoResponse updatePassword(LoginRequest request, String tokenEmail) {
+        String email = request.getEmail();
+        String password = request.getPassword();
+
+        // 인증된 이메일인지 확인
+        if (!tokenEmail.equals(email)) {
+            log.warn("[비밀번호 변경 실패] 이메일 불일치 - tokenEmail={}, requestEmail={}", Util.maskEmail(tokenEmail), Util.maskEmail(email));
+            throw new ResourceNotFoundException(ErrorStatus.EMAIL_UNCERTIFIED);
+        }
+
+        // 가입된 사용자인지 확인
+        Users user = usersRepository.findByEmail(email)
+                .orElseThrow(() -> {
+                    log.warn("[비밀번호 변경 실패] 가입되지 않은 이메일: {}", Util.maskEmail(email));
+                    return new ResourceNotFoundException(ErrorStatus.USER_NOT_FOUND);
+                });
+
+        // 탈퇴한 사용자인지 확인
+        if (user.getUsersStatus() != UsersStatus.ACTIVE) {
+            log.warn("[비밀번호 변경 실패] 탈퇴한 사용자: {}", Util.maskEmail(email));
+            throw new InvalidStateException(ErrorStatus.WITHDRAWN_USER);
+        }
+
+        // 비밀번호 변경
+        user.setEncodedPassword((bCryptPasswordEncoder.encode(password)));
+        return AuthInfoResponse.builder()
+                .userId(user.getId())
+                .role(user.getRole())
+                .email(user.getEmail())
+                .build();
+    }
+
+    /**
+     * 회원 탈퇴 (soft-delete)
+     */
+    public void withdrawUser(String username, String token) {
+        log.info("[회원 탈퇴 요청] 사용자: {}", Util.maskEmail(username));
+        // access token 블랙리스트 등록 & refresh token 삭제
+        tokenService.destroyToken(username, token);
+        Users user = usersRepository.findByEmail(username)
+                .orElseThrow(() -> new ResourceNotFoundException(ErrorStatus.USER_NOT_FOUND));
+        //유저 상태 변경
+        user.changeUserStatus(UsersStatus.INACTIVE);
+        user.setInactiveAt();
+    }
+
+    /**
+     * 회원 삭제
+     */
+    public void deleteUser(String username, String token) {
+        log.info("[회원 탈퇴 요청] 사용자: {}", Util.maskEmail(username));
+        // access token 블랙리스트 등록 & refresh token 삭제
+        tokenService.destroyToken(username, token);
+        // 디비에서 user 정보 삭제
+        usersRepository.deleteByEmail(username);
+        log.info("[회원 탈퇴 완료] 사용자: {}", Util.maskEmail(username));
     }
 }
