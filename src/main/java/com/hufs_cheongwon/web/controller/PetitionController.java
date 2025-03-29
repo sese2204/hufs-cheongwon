@@ -283,4 +283,24 @@ public class PetitionController {
     public ApiResponse<PetitionStatsDto> getPetitionStats(){
         return ApiResponse.onSuccess(SuccessStatus.PETITION_STATS_RETRIEVED ,petitionStatService.getPetitionStats());
     }
+
+    @PostMapping("/{petition_id}/bookmark")
+    public ApiResponse<PetitionBookmarkResponse> togglePetitionBookmark(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @PathVariable("petition_id") Long petitionId
+    ) {
+        return ApiResponse.onSuccess(SuccessStatus.PETITION_BOOKMARKED,
+                petitionService.togglePetitionBookmark(customUserDetails.getUser().getId(), petitionId));
+    }
+
+    @GetMapping("/bookmark")
+    public ApiResponse<Page<PetitionResponse>> getBookmarkedPetitions(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<PetitionResponse> responses = petitionService.getBookmarkedPetitions(customUserDetails.getUser(), pageable);
+        return ApiResponse.onSuccess(SuccessStatus.PETITION_BOOKMARKS_RETRIEVED, responses);
+    }
 }

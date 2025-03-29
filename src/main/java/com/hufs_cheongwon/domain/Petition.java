@@ -44,6 +44,9 @@ public class Petition extends BaseTimeEntity{
     @Column
     private Integer reportCount = 0;
 
+    @Column
+    private Integer bookmarkCount = 0;
+
     //userId
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id", nullable = false)
@@ -60,6 +63,9 @@ public class Petition extends BaseTimeEntity{
 
     @OneToMany(mappedBy = "petition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Link> links = new ArrayList<>();
+
+    @OneToMany(mappedBy = "petition", cascade = CascadeType.ALL)
+    private List<PetitionBookmark> petitionBookmarks = new ArrayList<>();
 
     @Builder
     public Petition(Users user, String title, Category category, String content, PetitionStatus petitionStatus) {
@@ -86,6 +92,14 @@ public class Petition extends BaseTimeEntity{
     public void changePetitionStatus(PetitionStatus newStatus) {
         this.petitionStatus = newStatus;
     }
+    public void increaseBookmarkCount() {
+        this.bookmarkCount++;
+    }
+
+    public void decreaseBookmarkCount() {
+        if (this.bookmarkCount > 0) this.bookmarkCount--;
+    }
+
     /**
      * 연관관계 메소드
      */
@@ -103,5 +117,8 @@ public class Petition extends BaseTimeEntity{
     }
     public void removeResponse() {
         this.response = null;
+    }
+    public void addBookmark(PetitionBookmark petitionBookmark) {
+        this.petitionBookmarks.add(petitionBookmark);
     }
 }
